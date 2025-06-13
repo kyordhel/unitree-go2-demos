@@ -31,6 +31,7 @@ set(TARGET_DEPENDENCIES
 
 add_subdirectory(sport_client)
 add_subdirectory(standsit_demo)
+add_subdirectory(walk_demo)
 
 # ament_target_dependencies(standsit ${TARGET_DEPENDENCIES})
 

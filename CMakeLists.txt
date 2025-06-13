@@ -17,6 +17,7 @@ include(nlohmannJSON_import.cmake)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(unitree_go REQUIRED)
 find_package(unitree_api REQUIRED)
 
@@ -32,6 +33,7 @@ set(TARGET_DEPENDENCIES
 add_subdirectory(sport_client)
 add_subdirectory(standsit_demo)
 add_subdirectory(walk_demo)
+add_subdirectory(dog_base)
 
 # ament_target_dependencies(standsit ${TARGET_DEPENDENCIES})
 

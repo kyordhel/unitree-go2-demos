@@ -24,7 +24,7 @@ int main(int argc, char **argv){
 	publisher = nodePtr->create_publisher<Request>("/api/sport/request", 10);
 
 	std::thread task_thread( task );
-	rclcpp::spin(nodePtr);
+	while(rclcpp::ok()) rclcpp::spin_some(nodePtr);
 	task_thread.join();
 	return 0;
 }
@@ -56,4 +56,5 @@ void task(){
 	sc.StandDown();
 	std::this_thread::sleep_for(std::chrono::seconds(2));
 
+	rclcpp::shutdown();
 }

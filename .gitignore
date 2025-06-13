@@ -1,0 +1,18 @@
+# Ignore everything
+*
+# But these files
+!.gitattributes
+!.gitignore
+!CMakeLists.txt
+!fetch-unitree-pkgs.sh
+!LICENSE
+!package.xml
+!readme.MD
+# And these filetypes
+!*.h
+!*.hpp
+!*.c
+!*.cmake
+!*.cpp
+# Even if they are in subdirectories
+!**/

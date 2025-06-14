@@ -1,7 +1,8 @@
 /* ** *****************************************************************
-* walk.cpp
+* dogbase.cpp
 *
-* Second test attempt to control the unitree Go2 using the SportClient
+* Forwards a Twist to the sport_client and broadcasts the 
+* transform as odometry
 *
 * Author:  Mauricio Matamoros
 * License: MIT
@@ -20,26 +21,26 @@
 #include <geometry_msgs/msg/transform_stamped.hpp>
 
 #include "sport_client/sport_client.h"
-
+// #include <unitree_api/msg/response.hpp>
 
 
 using Request          = unitree_api::msg::Request;
+// using Response         = unitree_api::msg::Response;
+// using ResponsePtr      = std::shared_ptr<Response>;
 using Twist            = geometry_msgs::msg::Twist;
 using TwistPtr         = std::shared_ptr<Twist>;
 using TransformStamped = geometry_msgs::msg::TransformStamped;
 using SportClientPtr   = std::shared_ptr<SportClient>;
 
 
-void task();
-bool walk(SportClient& sc, float speed, uint8_t seconds);
-bool turn(SportClient& sc, float arad);
 int main(int argc, char **argv);
 
 class DogBaseNode : public rclcpp::Node{
 	private:
 		SportClientPtr sc;
 		rclcpp::Publisher<Request>::SharedPtr pub;
-		rclcpp::Subscription<Twist>::SharedPtr sub;
+		rclcpp::Subscription<Twist>::SharedPtr sub_cmd_vel;
+		// rclcpp::Subscription<Response>::SharedPtr sub_response;
 		std::unique_ptr<tf2_ros::TransformBroadcaster> tbc;
 
 	public:
@@ -47,6 +48,7 @@ class DogBaseNode : public rclcpp::Node{
 
 	private:
 		void handleTwist(const TwistPtr msg);
+		// void handleResponse(const ResponsePtr msg);
 };
 
 
@@ -62,15 +64,33 @@ int main(int argc, char **argv){
 
 DogBaseNode::DogBaseNode():
 	Node("dog_base_node"){
+	tbc = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 	pub = this->create_publisher<Request>("/api/sport/request", 10);
-	sub = this->create_subscription<Twist>("", 10,
-	std::bind(&DogBaseNode::handleTwist, this, std::placeholders::_1));
+	// sub_response = this->create_subscription<Response>("/api/sport/response", 10,
+	//	std::bind(&DogBaseNode::handleResponse, this, std::placeholders::_1)
+	//);
+	sub_cmd_vel = this->create_subscription<Twist>("/cmd_vel", 10,
+		std::bind(&DogBaseNode::handleTwist, this, std::placeholders::_1)
+	);
 	sc  = std::make_shared<SportClient>(pub);
+
+	RCLCPP_INFO(this->get_logger(), "Dogbase node running. Standing up...");
+	sc->StandDown();
+	std::this_thread::sleep_for(std::chrono::seconds(2));
+	sc->StandUp();
+	std::this_thread::sleep_for(std::chrono::seconds(2));
+	sc->BalanceStand();
+	RCLCPP_INFO(this->get_logger(), "Dogbase ready");
 }
 
 
 
 void DogBaseNode::handleTwist(const TwistPtr msg){
+	RCLCPP_INFO(this->get_logger(),
+		"Handle twist: (%0.2f,%0.2f,%0.2f) (%0.2f,%0.2f,%0.2f)",
+		msg->linear.x,  msg->linear.y,  msg->linear.z,
+		msg->angular.x, msg->angular.y, msg->angular.z
+	);
 	TransformStamped t;
 
 	// Initialize tf variables
@@ -80,9 +100,9 @@ void DogBaseNode::handleTwist(const TwistPtr msg){
 
 	// Go2 moves on ground: x is front-back, y is left-right
 	// Here we forward the Twist data to the Go2 and tranform.
-	sc.Move(msg->linear.x, msg->linear.y, msg->angular.z);
-	t.transform.translation.x = msg->linear->x;
-	t.transform.translation.y = msg->linear->y;
+	sc->Move(msg->linear.x, msg->linear.y, msg->angular.z);
+	t.transform.translation.x = msg->linear.x;
+	t.transform.translation.y = msg->linear.y;
 	t.transform.translation.z = 0.0;
 	//t.transform.translation = msg->linear;
 
@@ -99,26 +119,6 @@ void DogBaseNode::handleTwist(const TwistPtr msg){
 }
 
 
-
-bool walk(SportClient& sc, float speed, uint8_t seconds){
-	if(speed >  1) speed =  1;
-	if(speed < -1) speed = -1;
-	uint32_t ds = 500;
-	for(uint32_t ms = 0; ms < 1000*seconds; ms+=ds){
-		if( !rclcpp::ok() ) return false;
-		sc.Move(speed, 0, 0);
-		std::this_thread::sleep_for(std::chrono::milliseconds(ds));
-	}
-	return true;
-}
-
-bool turn(SportClient& sc, float arad){
-	if(arad >  3.141592) arad =  3.141592;
-	if(arad < -3.141592) arad = -3.141592;
-	uint16_t time = std::min<uint16_t>(1500, 1500 * std::abs(arad));
-
-	if( !rclcpp::ok() ) return false;
-	sc.Move(0, 0, arad);
-	std::this_thread::sleep_for(std::chrono::milliseconds(time));
-	return true;
-}
+//void DogBaseNode::handleResponse(const ResponsePtr msg){
+//
+//}

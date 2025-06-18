@@ -5,6 +5,7 @@ project(dogbase)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
@@ -26,6 +27,7 @@ target_link_libraries(dogbase
 
 ament_target_dependencies(dogbase
   ${TARGET_DEPENDENCIES}
+  nav_msgs
   geometry_msgs
   tf2
   tf2_ros

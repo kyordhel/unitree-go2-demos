@@ -38,8 +38,9 @@ add_subdirectory(minimal_publisher)
 
 # ament_target_dependencies(standsit ${TARGET_DEPENDENCIES})
 
-# install(TARGETS
-  # standsit
-# )
+install(TARGETS
+  standsit_demo
+  dogbase
+)
 
 ament_package()

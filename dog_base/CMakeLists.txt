@@ -26,6 +26,7 @@ target_link_libraries(dogbase
 
 ament_target_dependencies(dogbase
   ${TARGET_DEPENDENCIES}
+  std_msgs
   geometry_msgs
   tf2
   tf2_ros

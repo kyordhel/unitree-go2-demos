@@ -92,14 +92,14 @@ void signal_handler(int signal){
 DogBaseNode::DogBaseNode():
 	Node("dog_base_node"){
 	tbc = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
-	pub = this->create_publisher<Request>("/api/sport/request", 10);
+	pub = this->create_publisher<Request>("/api/sport/request", 5);
 	// sub_response = this->create_subscription<Response>("/api/sport/response", 10,
 	// 	std::bind(&DogBaseNode::handleResponse, this, std::placeholders::_1)
 	// );
-	sub_cmd_vel = this->create_subscription<Twist>("/cmd_vel", 10,
+	sub_cmd_vel = this->create_subscription<Twist>("/cmd_vel", 5,
 		std::bind(&DogBaseNode::handleTwist, this, std::placeholders::_1)
 	);
-	sub_go2_trick = this->create_subscription<String>("/go2_trick", 10,
+	sub_go2_trick = this->create_subscription<String>("/go2_trick", 1,
 		std::bind(&DogBaseNode::handleTrick, this, std::placeholders::_1)
 	);
 	sc  = std::make_shared<SportClient>(pub);
@@ -193,8 +193,8 @@ void DogBaseNode::handleTwist(const TwistPtr msg){
 	// Go2 moves on ground: x is front-back, y is left-right
 	// Here we forward the Twist data to the Go2 and tranform.
 	sc->Move(msg->linear.x, msg->linear.y, msg->angular.z);
-	t.transform.translation.x = msg->linear.x;
-	t.transform.translation.y = msg->linear.y;
+	t.transform.translation.x+= msg->linear.x;
+	t.transform.translation.y+= msg->linear.y;
 	t.transform.translation.z = 0.0;
 	//t.transform.translation = msg->linear;
 

@@ -56,14 +56,17 @@ class DogBaseNode : public rclcpp::Node{
 		// rclcpp::Subscription<Response>::SharedPtr sub_response;
 		std::unique_ptr<tf2_ros::TransformBroadcaster> tbc;
 		DogStatus status;
+		float bodyHeight;
 
 	public:
 		DogBaseNode();
 		void layDown();
 		void standReady();
 		void sitDown();
+		void setBodyHeight(float height);
 
 	private:
+		void initGo2();
 		void handleTwist(const TwistPtr msg);
 		void handleTrick(const StringPtr msg);
 		// void handleResponse(const ResponsePtr msg);
@@ -90,7 +93,7 @@ void signal_handler(int signal){
 
 
 DogBaseNode::DogBaseNode():
-	Node("dog_base_node"){
+	Node("dog_base_node"), bodyHeight(0){
 	tbc = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 	pub = this->create_publisher<Request>("/api/sport/request", 5);
 	// sub_response = this->create_subscription<Response>("/api/sport/response", 10,
@@ -103,7 +106,11 @@ DogBaseNode::DogBaseNode():
 		std::bind(&DogBaseNode::handleTrick, this, std::placeholders::_1)
 	);
 	sc  = std::make_shared<SportClient>(pub);
+	initGo2();
+}
 
+
+void DogBaseNode::initGo2(){
 	RCLCPP_INFO(this->get_logger(), "Dogbase node running. Standing up...");
 	sc->RiseSit();
 	std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -112,6 +119,8 @@ DogBaseNode::DogBaseNode():
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		sc->BalanceStand();
 	}
+	setBodyHeight(bodyHeight);
+	// -0.18~0.03
 	RCLCPP_INFO(this->get_logger(), "Dogbase ready");
 	status = DogStatus::StandReady;
 }
@@ -159,15 +168,21 @@ void DogBaseNode::sitDown(){
 }
 
 
+void DogBaseNode::setBodyHeight(float height){
+	bodyHeight = std::max<float>(height, -0.06);
+	bodyHeight = std::min<float>(bodyHeight, 0.03);
+	sc->BodyHeight(bodyHeight);
+}
+
+
 
 void DogBaseNode::handleTrick(const StringPtr msg){
-	// static std::regex rxTrick("*.(\\w+)\\s*(\\d+(\\.\\d+)?)?.*");
-	// std::smatch match;
-	std::string& trick = msg->data;
+	static std::regex rxTrick("(\\w+)\\s*(-?\\d+(\\.\\d+)?)?");
+	std::smatch match;
 
-	RCLCPP_INFO(this->get_logger(), "/trick: %s", trick.c_str() );
-
-	// if (!std::regex_search(s, match, rxTrick)) return;
+	// RCLCPP_INFO(this->get_logger(), "/trick: %s", trick.c_str() );
+	if(!std::regex_search(msg->data, match, rxTrick)) return;
+	std::string trick = match[1];
 
 	if((trick == "standup") || (trick == "stand"))
 		standReady();
@@ -175,6 +190,10 @@ void DogBaseNode::handleTrick(const StringPtr msg){
 	if(trick == "lay")   layDown();
 	// if(trick == "damp")  sc->Damp();
 	// if(trick == "rise")  sc->RiseSit();
+	if(trick == "bodyUp") setBodyHeight(bodyHeight + 0.005);
+	if(trick == "bodyDown") setBodyHeight(bodyHeight - 0.005);
+	if((trick == "bodyHeight") && (match.size() > 2))
+		setBodyHeight(std::stof(match[2]));
 }
 
 void DogBaseNode::handleTwist(const TwistPtr msg){

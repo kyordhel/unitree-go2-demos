@@ -30,16 +30,14 @@ set(TARGET_DEPENDENCIES
   std_msgs
 )
 
+set(INSTALL_DIR lib/${PROJECT_NAME})
+
 add_subdirectory(sport_client)
 add_subdirectory(standsit_demo)
 add_subdirectory(walk_demo)
 add_subdirectory(dog_base)
-add_subdirectory(minimal_publisher)
+
 
 # ament_target_dependencies(standsit ${TARGET_DEPENDENCIES})
-
-# install(TARGETS
-  # standsit
-# )
 
 ament_package()

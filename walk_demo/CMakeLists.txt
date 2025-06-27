@@ -20,13 +20,13 @@ target_link_libraries(walk_demo
   sportclient
 )
 
-
 ament_target_dependencies(walk_demo
   ${TARGET_DEPENDENCIES}
 )
 
 install(TARGETS
   walk_demo
+  DESTINATION ${INSTALL_DIR}
 )
 
 # ament_package()

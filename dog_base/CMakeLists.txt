@@ -34,6 +34,5 @@ ament_target_dependencies(dogbase
 
 install(TARGETS
   dogbase
+  DESTINATION ${INSTALL_DIR}
 )
-
-# ament_package()

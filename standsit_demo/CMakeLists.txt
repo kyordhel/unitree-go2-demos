@@ -33,6 +33,7 @@ ament_target_dependencies(standsit_demo
 
 install(TARGETS
   standsit_demo
+  DESTINATION ${INSTALL_DIR}
 )
 
 # ament_package()

@@ -45,6 +45,7 @@ enum DogStatus{
 	Sitting,
 	LayingDown,
 	Damped,
+	Dancing,
 };
 
 class DogBaseNode : public rclcpp::Node{
@@ -60,6 +61,7 @@ class DogBaseNode : public rclcpp::Node{
 
 	public:
 		DogBaseNode();
+		void dance(bool d2);
 		void layDown();
 		void standReady();
 		void sitDown();
@@ -111,6 +113,7 @@ DogBaseNode::DogBaseNode():
 
 
 void DogBaseNode::initGo2(){
+	sc->ContinuousGait(false);
 	RCLCPP_INFO(this->get_logger(), "Dogbase node running. Standing up...");
 	sc->RiseSit();
 	std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -160,11 +163,24 @@ void DogBaseNode::layDown(){
 
 
 void DogBaseNode::sitDown(){
-	if(status == DogStatus::LayingDown) return;
+	if(status == DogStatus::Sitting) return;
 	standReady();
 	std::this_thread::sleep_for(std::chrono::milliseconds(700));
 	sc->Sit();
 	status = DogStatus::Sitting;
+}
+
+
+void DogBaseNode::dance(bool d2){
+	if(status == DogStatus::Dancing) return;
+	standReady();
+	std::this_thread::sleep_for(std::chrono::milliseconds(700));
+	if(d2) sc->Dance2();
+	else   sc->Dance1();
+	std::make_unique<std::thread>( [this](){
+		std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+		status == DogStatus::StandReady;
+	});
 }
 
 
@@ -188,6 +204,8 @@ void DogBaseNode::handleTrick(const StringPtr msg){
 		standReady();
 	if(trick == "sit")   sitDown();
 	if(trick == "lay")   layDown();
+	if(trick == "dance1")  dance(false);
+	if(trick == "dance2")  dance(true);
 	// if(trick == "damp")  sc->Damp();
 	// if(trick == "rise")  sc->RiseSit();
 	if(trick == "bodyUp") setBodyHeight(bodyHeight + 0.005);
